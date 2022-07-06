@@ -12,19 +12,13 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../acab'))
+sys.path.insert(0, os.path.abspath('../acab_config'))
 
-import warnings
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import acab_config
-    acab.setup()
 
 # -- Project information -----------------------------------------------------
 
 project   = 'acab_config'
-copyright = '2022, J Grey'
+copyright = '2022'
 author    = 'J Grey'
 
 # -- General configuration ---------------------------------------------------
