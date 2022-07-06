@@ -73,30 +73,36 @@ class AcabConfig(Config_i, metaclass=ConfigSingletonMeta):
     Uses ${SectionName:Key} interpolation in values,
     Turns multi-line values into lists
     """
-    paths     : InitVar[None|list[Path]|list[str]]          = None
-    hooks     : set[GenFunc]                     = field(default_factory=set)
+    paths                : InitVar[None|list[Path]|list[str]] = None
+    hooks                : set[GenFunc]                       = field(default_factory=set)
+    delimiters           : str                                = field(default="=")
+    suffix               : str                                = field(default=".config")
+    logger_name          : str                                = field(default="acab_config")
 
-    _files    : set[str]                         = field(init=False, default_factory=set)
-    _config   : ConfigParser                     = field(init=False)
-    _overrides: dict[str, str]                   = field(init=False, default_factory=override_constructor)
 
-    # Populated by hooks:
-    enums              : dict[str, EnumMeta]     = field(init=False, default_factory=dict)
-    defaults           : dict[str, Enum]         = field(init=False, default_factory=dict)
-    syntax_extension   : dict[str, Enum]         = field(init=False, default_factory=dict)
-    printing_extension : dict[Enum, str]         = field(init=False, default_factory=dict)
-    attr               : AttrGenerator           = field(init=False)
+    _root_logger         : Logger                             = field(init=False, default=None)
+    _files               : set[str]                           = field(init=False, default_factory=set)
+    _config              : ConfigParser                       = field(init=False)
+    _overrides           : dict[str, str]                     = field(init=False, default_factory=override_constructor)
 
-    specs_invalid     : dict[int, int]           = field(init=False, default_factory=dict)
-    actions   : dict[Any, GenFunc]               = field(init=False, default_factory=lambda: CA.DEFAULT_ACTIONS)
-    type_actions : dict[Type[Any], GenFunc]      = field(init=False, default_factory=lambda: CA.TYPE_ACTIONS)
-    actions_e : ClassVar[Type[CA.ConfigActions]] = CA.ConfigActions
+    # Populated by hooks :
+    enums                : dict[str, EnumMeta]                = field(init=False, default_factory=dict)
+    defaults             : dict[str, Enum]                    = field(init=False, default_factory=dict)
+    syntax_extension     : dict[str, Enum]                    = field(init=False, default_factory=dict)
+    printing_extension   : dict[Enum, str]                    = field(init=False, default_factory=dict)
+    attr                 : AttrGenerator                      = field(init=False)
+
+    specs_invalid        : dict[int, int]                     = field(init=False, default_factory=dict)
+    actions              : dict[Any, GenFunc]                 = field(init=False, default_factory=lambda: CA.DEFAULT_ACTIONS)
+    type_actions         : dict[Type[Any], GenFunc]           = field(init=False, default_factory=lambda: CA.TYPE_ACTIONS)
+    actions_e            : ClassVar[Type[CA.ConfigActions]]   = CA.ConfigActions
 
 
     def __post_init__(self, paths: None|list[str]|list[Path]):
-        self._config = ConfigParser(interpolation=ExtendedInterpolation(),
-                                    allow_no_value=True,
-                                    delimiters="=")
+        self._root_logger = logmod.getLogger(self.logger_name)
+        self._config      = ConfigParser(interpolation=ExtendedInterpolation(),
+                                         allow_no_value=True,
+                                         delimiters=self.delimiters)
         self.attr = AttrGenerator(self._config)
         # Overrides ConfigParser's default of lowercasing everything
         self._config.optionxform = lambda x: x #type:ignore
@@ -110,14 +116,16 @@ class AcabConfig(Config_i, metaclass=ConfigSingletonMeta):
         return self.value(lookup) #type:ignore
 
     def __contains__(self, key):
-        in_print    = key in self.printing_extension
-        in_base     = key in self._config
-        in_enums    = key in self.enums
-        in_defaults = key in self.defaults
-        in_overrides = key in self._overrides
-        return any([in_print, in_base, in_enums, in_defaults, in_overrides])
+        return any(key in x for x in [self.printing_extension,
+                                      self._config,
+                                      self.enums,
+                                      self.defaults,
+                                      self._overrides])
 
     def __repr__(self):
+        if not bool(self._files):
+            return f"<{self.__class__.__name__} : Nothing Loaded"
+
         common = commonpath(self._files)
         short_paths = [x[len(common):] for x in self._files]
         return f"<{self.__class__.__name__} : Base Path: {common}, Loaded Files: {', '.join(short_paths)}>"

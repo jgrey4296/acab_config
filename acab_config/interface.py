@@ -40,9 +40,6 @@ class ConfigSpec_d:
 
 @runtime_checkable
 class Config_i(Protocol):
-    suffix      : ClassVar[str]    = ".config"
-    root_logger : ClassVar[Logger] = getLogger('acab')
-
     @abc.abstractmethod
     def __call__(self, lookup) -> Any: pass
     @abc.abstractmethod
