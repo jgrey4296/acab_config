@@ -1,7 +1,88 @@
+[project]
+name            = "acab-config"
+version         = "0.0.1"
+description     = "A Config Singleton which provides load time guarantees"
+readme          = "README.md"
+requires-python = ">=3.10"
+license         = {file = "LICENSE"}
+keywords        = ["configuration"]
+authors         = [
+    {email = "jgrey4296@gmail.com"},
+    {name  = "J Grey"}
+]
+classifiers     = [
+    "Programming Language :: Python :: 3.10"
+]
+
+dependencies   = []
+
+[project.optional-dependencies]
+test = [
+    "pytest > 7.0.0",
+]
+color = [
+    "sty > 1.0.0",
+]
+docs = [
+    "sphinx > 4.4.0"
+]
+
+[project.urls]
+homepage      = "https://github.com/jgrey4296/acab-config"
+documentation = "https://readthedocs.org/acab-config"
+repository    = "https://github.com/jgrey4296/acab-config"
+changelog     = "https://github.com/jgrey4296/acab-config/blob/master/CHANGELOG.md"
+
+[project.scripts]
+
+[project.gui-scripts]
+# spam-gui      = "spam:main_gui"
+
+[project.entry-points."nothing"]
+# tomatoes      = "spam:main_tomatoes"
+
+[tool.pytest.ini_options]
+log_cli       = false
+log_level     = "INFO"
+log_cli_level = "WARN"
+log_format    = "%(levelname)s %(name)s : %(message)s"
+
 [build-system]
 requires = [
-         "setuptools>=42",
+         "setuptools",
          "wheel"
 ]
 
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# packages = ['acab-config']
+include-package-data = true
+
+[tool.setuptools.packages.find]
+namespaces = true
+where = ["."]
+
+[tool.setuptools.package-data]
+"acab_config.__configs" = ["*.config"]
+
+[tool.setuptools.exclude-package-data]
+
+
+
+[tool.pyright]
+# strict = acab.*
+verboseOutput               = true
+typeCheckingMode            = "strict"
+pythonVersion               = "3.10"
+
+reportUnusedImport          = false
+reportAssertAlwaysTrue      = "information"
+reportMissingParameterType  = "warning"
+reportMissingTypeArgument   = "warning"
+reportMissingTypeStubs      = "warning"
+reportUnknownMemberType     = "warning"
+reportUnknownParameterType  = "information"
+reportUnknownVariableType   = "warning"
+reportUnnecessaryCast       = "information"
+reportUnnecessaryIsInstance = "warning"
