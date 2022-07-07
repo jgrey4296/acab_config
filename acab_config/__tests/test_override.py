@@ -44,16 +44,14 @@ class ConfigOverrideTests(unittest.TestCase):
 
         cls.base = files("acab_config.__tests")
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            AcabConfig(reset=True)
+        cls.old_instance = ConfigSingletonMeta._instance
+        ConfigSingletonMeta._instance = None
+
 
     @classmethod
     def tearDownClass(cls):
         logmod.root.removeHandler(cls.file_h)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            AcabConfig(reset=True)
+        ConfigSingletonMeta._instance = cls.old_instance
 
     def setUp(self):
         data_path   = files("acab_config.__tests")
@@ -61,9 +59,7 @@ class ConfigOverrideTests(unittest.TestCase):
         self.config = AcabConfig(base_config, build=True)
 
     def tearDown(self):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.config = AcabConfig(reset=True)
+        ConfigSingletonMeta._instance = None
 
     def test_clear(self):
         spec = self.config.prepare("Handler.System", "DEFAULT_SIGNAL")

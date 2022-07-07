@@ -50,17 +50,13 @@ class ConfigSingletonMeta(type(Protocol)):
         _hooks = set(hooks or [])
 
         match ConfigSingletonMeta._instance, paths, _hooks:
-            case _, _, _ if 'reset' in kwargs:
-                warnings.warn("Invalidating AcabConfig Instance")
-                ConfigSingletonMeta._instance = None
-                return None
             case None, _, _ if 'build' in kwargs:
                 logging.info("Building {}.{} Singleton", cls.__module__, cls.__qualname__)
                 ConfigSingletonMeta._instance : Config_i = super().__call__(paths, _hooks)
             case None, _, _:
                 raise AcabConfigException("Trying to get an AcabConfig before it has been built, call AcabConfig(..., build=True) before importing anything else")
             case _, _, _ if 'build' in kwargs:
-                raise AcabConfigException("Duplicate call build AcabConfig with build=True")
+                logging.warning("Unnecessary Call to build AcabConfig")
             case _, [], []:
                 pass
             case _, _, _:

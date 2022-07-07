@@ -36,16 +36,14 @@ class ConfigTests(unittest.TestCase):
         logging.root.addHandler(cls.file_h)
         logging.root.handlers[0].setLevel(logmod.WARNING)
 
-        cls.base        = split(__file__)[0]
-        # Setup default config with default files
+        cls.old_instance = ConfigSingletonMeta._instance
+        ConfigSingletonMeta._instance = None
 
     @classmethod
     def tearDownClass(cls):
         logmod.root.removeHandler(cls.file_h)
         # Manual singleton overriding
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            cls.config = AcabConfig(reset=True)
+        ConfigSingletonMeta._instance = cls.old_instance
 
     def setUp(self):
         data_path = files("acab_config.__tests")
@@ -53,9 +51,7 @@ class ConfigTests(unittest.TestCase):
         self.config = AcabConfig(config_file, build=True)
 
     def tearDown(self):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.config = AcabConfig(reset=True)
+        ConfigSingletonMeta._instance = None
 
     def test_config_singleton(self):
         """ Check the config obj is a singleton"""

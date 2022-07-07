@@ -173,7 +173,7 @@ class AcabConfig(Config_i, metaclass=ConfigSingletonMeta):
             logging.info("No Hooks to run")
 
         for hook in sort_by_priority(self.hooks):
-            logging.info("Running {}", hook.__name__)
+            logging.info("Running Config Hook: {}", hook.__name__)
             hook(self)
 
     def override(self, spec: ConfigSpec_d, value:str) -> None:
@@ -275,7 +275,7 @@ class AcabConfig(Config_i, metaclass=ConfigSingletonMeta):
     def _enum_value(self, val:Enum) -> str:
         """ Lookup the print representation of an enum value """
         if val not in self.printing_extension:
-            raise AcabConfigException("Unrecognised Enum request: {val}")
+            raise AcabConfigException(f"Unrecognised Enum request: {val}")
 
         return self.printing_extension[val]
 
