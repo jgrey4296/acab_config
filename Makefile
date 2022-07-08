@@ -59,7 +59,7 @@ srcbuild:
 	pip install --use-feature=in-tree-build -t ${BUILD}/pip_src --src ${BUILD}/pip_temp -U .
 
 uninstall:
-	pip uninstall -y rust_py
+	pip uninstall -y acab_config
 
 requirements:
 	pip freeze --all --exclude-editable -r requirements.txt > requirements.txt
