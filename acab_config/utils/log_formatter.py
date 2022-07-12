@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import warnings
+import re
 from collections import defaultdict
 from string import Formatter
 from typing import (TYPE_CHECKING, Any, Callable, ClassVar, Final, Generic,
@@ -14,6 +15,7 @@ from typing import (TYPE_CHECKING, Any, Callable, ClassVar, Final, Generic,
 import _string
 
 try:
+    # If `sty` is installed, use that
     from sty import bg, ef, fg, rs
     COLOUR_RESET = rs.all
     LEVEL_MAP = {
@@ -40,10 +42,12 @@ try:
         "RESET"          : rs.all
         }
 except ImportError:
+    # Otherwise don't add colours
     LEVEL_MAP    = defaultdict(lambda: "")
     COLOUR_RESET = ""
 
 class SimpleLogColour:
+    """ Utility class for wrapping strings with specific colours """
     def __init__(self):
         raise TypeError("SimpleLogColour is Static, don't instance it")
 
@@ -69,7 +73,8 @@ class AcabStringFormatter(Formatter):
     Custom String Formatter to be able to specify colours
     within the format spec.
     see https://docs.python.org/3/library/string.html
-    The Resulting dsl is:
+
+    The Resulting dsl is (note the addition of `colour` at the end of `format_spec`):
 
     format_spec     ::=  [[fill]align][sign][#][0][width][grouping_option][.precision][type][colour]
     fill            ::=  <any character>
@@ -114,7 +119,7 @@ class AcabMinimalLogRecord(logging.LogRecord):
     def install(cls):
         """
         Install the log record, capable of handling
-        both % and .format style messages
+        both standard % and .format style messages
         """
         warnings.warn(f"Installing {cls.__name__}", stacklevel=3)
 
@@ -143,7 +148,7 @@ class AcabMinimalLogRecord(logging.LogRecord):
 
 class AcabLogRecord(AcabMinimalLogRecord):
     """
-    Custom LogRecord which provides
+    Custom LogRecord which provides:
     \\.shortname : attribute of just the last 25 characters of the logging path
     (for aligning log files nicely)
 
@@ -227,6 +232,8 @@ class AcabLogFormatter(logging.Formatter):
 class AcabNameTruncateFormatter(logging.Formatter):
     """
     A Formatter for file logging, in a more verbose format than the stream formatter
+    It does, however, truncate the name of the module where the message occurred
+    to only the rightmost 25 characters (by default)
     """
     _default_fmt      = "{asctime} | {levelname:9} | {shortname:25} | {message}"
     _default_date_fmt = "%Y-%m-%d %H:%M:%S"
@@ -270,3 +277,35 @@ class AcabNameTruncateFormatter(logging.Formatter):
                 s = s + "\n"
             s = s + self.formatStack(record.stack_info)
         return s
+
+
+
+class AcabLogColourStripFormatter(logging.Formatter):
+    """
+    Force Colour Command codes to be stripped out of a string.
+    Useful for when you redirect printed strings with colour
+    to a file
+    (eg: acab repl traces)
+    """
+
+    _default_fmt      = "{asctime} | {levelname:9} | {shortname:25} | {message}"
+    _default_date_fmt = "%Y-%m-%d %H:%M:%S"
+    _default_style    = '{'
+    _colour_strip     = re.compile(r'\x1b\[([\d;]+)m?')
+
+    def __init__(self, *, fmt=None, record=False):
+        """
+        Create the AcabLogFormatter with a given *Brace* style log format
+        `record` will install the AcabLogRecord as the record factory if true
+        """
+        if not issubclass(logging.getLogRecordFactory(), AcabMinimalLogRecord):
+            AcabMinimalLogRecord.install()
+
+        super().__init__(fmt or self._default_fmt,
+                         datefmt=self._default_date_fmt,
+                         style=self._default_style)
+
+    def format(self, record):
+        result    = super().format(record)
+        no_colour = self._colour_strip.sub("", result)
+        return no_colour

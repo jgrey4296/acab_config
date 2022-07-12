@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import logging as logmod
-logging = logmod.getLogger(__name__)
 
-from acab_config.utils.log_formatter import AcabLogFormatter, AcabLogRecord, AcabNameTruncateFormatter, AcabMinimalLogRecord
 from acab_config.error.config_error import AcabConfigException
+from acab_config.utils.log_formatter import (AcabLogFormatter, AcabLogRecord,
+                                             AcabMinimalLogRecord,
+                                             AcabNameTruncateFormatter)
 from acab_config.utils.sorting import priority
+
+logging = logmod.getLogger(__name__)
 
 @priority(0)
 def log_hook(self):
